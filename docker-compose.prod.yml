@@ -20,7 +20,6 @@ services:
       options:
         awslogs-region: ${AWS_REGION}
         awslogs-group: /event-booking/mongodb
-        awslogs-stream-prefix: mongodb
 
   user-service:
     image: ${ECR_REGISTRY}/event-booking/user-service:${IMAGE_TAG:-latest}
@@ -42,7 +41,6 @@ services:
       options:
         awslogs-region: ${AWS_REGION}
         awslogs-group: /event-booking/user-service
-        awslogs-stream-prefix: user
 
   event-service:
     image: ${ECR_REGISTRY}/event-booking/event-service:${IMAGE_TAG:-latest}
@@ -67,7 +65,6 @@ services:
       options:
         awslogs-region: ${AWS_REGION}
         awslogs-group: /event-booking/event-service
-        awslogs-stream-prefix: event
 
   booking-service:
     image: ${ECR_REGISTRY}/event-booking/booking-service:${IMAGE_TAG:-latest}
@@ -94,7 +91,6 @@ services:
       options:
         awslogs-region: ${AWS_REGION}
         awslogs-group: /event-booking/booking-service
-        awslogs-stream-prefix: booking
 
   external-api-service:
     image: ${ECR_REGISTRY}/event-booking/external-api-service:${IMAGE_TAG:-latest}
@@ -109,6 +105,7 @@ services:
       - event-booking-network
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-}
     volumes:
       - ./serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
     logging:
@@ -116,7 +113,6 @@ services:
       options:
         awslogs-region: ${AWS_REGION}
         awslogs-group: /event-booking/external-api-service
-        awslogs-stream-prefix: external
 
   frontend:
     image: ${ECR_REGISTRY}/event-booking/frontend:${IMAGE_TAG:-latest}
@@ -136,7 +132,6 @@ services:
       options:
         awslogs-region: ${AWS_REGION}
         awslogs-group: /event-booking/frontend
-        awslogs-stream-prefix: frontend
 
 networks:
   event-booking-network:

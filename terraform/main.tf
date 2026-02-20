@@ -5,12 +5,9 @@ module "vpc" {
 }
 
 module "iam" {
-  source        = "./modules/iam"
-  project_name  = var.project_name
-  environment   = var.environment
-  aws_region    = var.aws_region
-  s3_bucket_arn = module.s3.bucket_arn
-  sqs_queue_arn = module.sqs.queue_arn
+  source       = "./modules/iam"
+  project_name = var.project_name
+  environment  = var.environment
 }
 
 module "ecr" {
