@@ -11,10 +11,31 @@ env:
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-2.amazonaws.com
 
 jobs:
+  check-aws:
+    name: Check AWS Configuration
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - name: Check for AWS credentials
+        id: check
+        env:
+          AWS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          EC2_KEY: ${{ secrets.EC2_HOST }}
+        run: |
+          if [ -n "$AWS_KEY" ] && [ -n "$EC2_KEY" ]; then
+            echo "configured=true" >> $GITHUB_OUTPUT
+          else
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "::notice::AWS/EC2 credentials not configured — deployment will be skipped"
+          fi
+
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: [check-aws]
+    if: needs.check-aws.outputs.configured == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
