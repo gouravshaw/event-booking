@@ -1,0 +1,105 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types: [completed]
+    branches: [main]
+
+env:
+  AWS_REGION: eu-west-2
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-2.amazonaws.com
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Copy production compose file to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "/home/ec2-user/app"
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ec2-user/app
+
+            # Login to ECR
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+            # Set environment variables
+            export ECR_REGISTRY=${{ env.ECR_REGISTRY }}
+            export AWS_REGION=${{ env.AWS_REGION }}
+            export IMAGE_TAG=${{ github.event.workflow_run.head_sha }}
+
+            # Pull latest images
+            docker compose -f docker-compose.prod.yml pull
+
+            # Deploy with zero-downtime
+            docker compose -f docker-compose.prod.yml up -d
+
+            # Cleanup old images
+            docker image prune -f
+
+      - name: Health check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Waiting for services to start..."
+            sleep 30
+
+            echo "Checking service health..."
+            SERVICES=("user:9090/user" "event:9091/event" "booking:9092/booking" "external:9093/external")
+            ALL_HEALTHY=true
+
+            for svc in "${SERVICES[@]}"; do
+              NAME=$(echo $svc | cut -d: -f1)
+              URL="http://localhost:$(echo $svc | cut -d: -f2)/actuator/health"
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" $URL || echo "000")
+
+              if [ "$STATUS" = "200" ]; then
+                echo "$NAME service: HEALTHY"
+              else
+                echo "$NAME service: UNHEALTHY (HTTP $STATUS)"
+                ALL_HEALTHY=false
+              fi
+            done
+
+            # Check frontend
+            FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80 || echo "000")
+            if [ "$FRONTEND_STATUS" = "200" ]; then
+              echo "Frontend: HEALTHY"
+            else
+              echo "Frontend: UNHEALTHY (HTTP $FRONTEND_STATUS)"
+              ALL_HEALTHY=false
+            fi
+
+            if [ "$ALL_HEALTHY" = true ]; then
+              echo "All services are healthy! Deployment successful."
+            else
+              echo "WARNING: Some services are unhealthy. Check logs."
+              exit 1
+            fi

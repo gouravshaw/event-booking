@@ -1,0 +1,146 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: event-booking-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - event-booking-network
+    healthcheck:
+      test: mongosh --eval 'db.runCommand("ping").ok' || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: /event-booking/mongodb
+        awslogs-stream-prefix: mongodb
+
+  user-service:
+    image: ${ECR_REGISTRY}/event-booking/user-service:${IMAGE_TAG:-latest}
+    container_name: event-booking-user-service
+    restart: always
+    ports:
+      - "9090:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - event-booking-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+    volumes:
+      - ./serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: /event-booking/user-service
+        awslogs-stream-prefix: user
+
+  event-service:
+    image: ${ECR_REGISTRY}/event-booking/event-service:${IMAGE_TAG:-latest}
+    container_name: event-booking-event-service
+    restart: always
+    ports:
+      - "9091:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - event-booking-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-}
+      - SQS_QUEUE_URL=${SQS_QUEUE_URL:-}
+      - AWS_REGION=${AWS_REGION:-eu-west-2}
+    volumes:
+      - ./serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: /event-booking/event-service
+        awslogs-stream-prefix: event
+
+  booking-service:
+    image: ${ECR_REGISTRY}/event-booking/booking-service:${IMAGE_TAG:-latest}
+    container_name: event-booking-booking-service
+    restart: always
+    ports:
+      - "9092:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      event-service:
+        condition: service_started
+    networks:
+      - event-booking-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+      - EVENT_SERVICE_URL=http://event-service:8080/event
+      - SQS_QUEUE_URL=${SQS_QUEUE_URL:-}
+      - AWS_REGION=${AWS_REGION:-eu-west-2}
+    volumes:
+      - ./serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: /event-booking/booking-service
+        awslogs-stream-prefix: booking
+
+  external-api-service:
+    image: ${ECR_REGISTRY}/event-booking/external-api-service:${IMAGE_TAG:-latest}
+    container_name: event-booking-external-api-service
+    restart: always
+    ports:
+      - "9093:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - event-booking-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+    volumes:
+      - ./serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: /event-booking/external-api-service
+        awslogs-stream-prefix: external
+
+  frontend:
+    image: ${ECR_REGISTRY}/event-booking/frontend:${IMAGE_TAG:-latest}
+    container_name: event-booking-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - user-service
+      - event-service
+      - booking-service
+      - external-api-service
+    networks:
+      - event-booking-network
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION}
+        awslogs-group: /event-booking/frontend
+        awslogs-stream-prefix: frontend
+
+networks:
+  event-booking-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

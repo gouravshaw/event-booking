@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # MongoDB Container
+  mongodb:
+    image: mongo:latest
+    container_name: event-booking-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - event-booking-network
+    healthcheck:
+      # Simplify the health check to just check if MongoDB is responding
+      test: mongosh --eval 'db.runCommand("ping").ok' || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # User Service
+  user-service:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    container_name: event-booking-user-service
+    ports:
+      - "9090:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - event-booking-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+    volumes:
+      - ./user/src/main/resources/serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
+
+  # Event Service
+  event-service:
+    build:
+      context: ./event
+      dockerfile: Dockerfile
+    container_name: event-booking-event-service
+    ports:
+      - "9091:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - event-booking-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+    volumes:
+      - ./event/src/main/resources/serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
+
+  # Booking Service
+  booking-service:
+    build:
+      context: ./booking
+      dockerfile: Dockerfile
+    container_name: event-booking-booking-service
+    ports:
+      - "9092:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      event-service:
+        condition: service_started
+    networks:
+      - event-booking-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+      - EVENT_SERVICE_URL=http://event-service:8080/event
+    volumes:
+      - ./booking/src/main/resources/serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
+
+  # External API Service
+  external-api-service:
+    build:
+      context: ./external-api
+      dockerfile: Dockerfile
+    container_name: event-booking-external-api-service
+    ports:
+      - "9093:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - event-booking-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+    volumes:
+      - ./external-api/src/main/resources/serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
+
+  # Frontend
+  frontend:
+    build:
+      context: ./eventbooking-app
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_FIREBASE_API_KEY: ${REACT_APP_FIREBASE_API_KEY}
+        REACT_APP_FIREBASE_AUTH_DOMAIN: ${REACT_APP_FIREBASE_AUTH_DOMAIN}
+        REACT_APP_FIREBASE_PROJECT_ID: ${REACT_APP_FIREBASE_PROJECT_ID}
+        REACT_APP_FIREBASE_STORAGE_BUCKET: ${REACT_APP_FIREBASE_STORAGE_BUCKET}
+        REACT_APP_FIREBASE_MESSAGING_SENDER_ID: ${REACT_APP_FIREBASE_MESSAGING_SENDER_ID}
+        REACT_APP_FIREBASE_APP_ID: ${REACT_APP_FIREBASE_APP_ID}
+    container_name: event-booking-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - user-service
+      - event-service
+      - booking-service
+      - external-api-service
+    networks:
+      - event-booking-network
+
+networks:
+  event-booking-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

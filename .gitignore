@@ -1,0 +1,83 @@
+# ============================
+# Secrets & Credentials
+# ============================
+**/serviceAccountKey.json
+**/*.pem
+**/*.key
+.env
+.env.*
+!.env.example
+
+# ============================
+# Java / Maven
+# ============================
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ============================
+# Node / React
+# ============================
+**/node_modules/
+**/build/
+**/coverage/
+**/.pnp
+**/.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================
+# Terraform
+# ============================
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ============================
+# Docker
+# ============================
+docker-compose.override.yml
+
+# ============================
+# OS / Editor
+# ============================
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
+*.swo
+*~

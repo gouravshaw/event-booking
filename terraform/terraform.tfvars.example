@@ -1,0 +1,24 @@
+# AWS
+aws_region        = "eu-west-2"
+ec2_instance_type = "t3.medium"
+ec2_key_name      = "your-key-pair-name"
+allowed_ssh_cidr  = "YOUR_IP/32"
+
+# Project
+project_name = "event-booking"
+environment  = "prod"
+
+# Alerts
+alert_email = "your-email@example.com"
+
+# Secrets (passed via CLI or environment variables for security)
+# export TF_VAR_firebase_api_key="your-firebase-api-key"
+# export TF_VAR_firebase_auth_domain="your-project.firebaseapp.com"
+# export TF_VAR_firebase_project_id="your-project-id"
+# export TF_VAR_google_maps_api_key="your-google-maps-api-key"
+# export TF_VAR_admin_secret="your-admin-secret"
+firebase_api_key     = ""
+firebase_auth_domain = ""
+firebase_project_id  = ""
+google_maps_api_key  = ""
+admin_secret         = "password"
