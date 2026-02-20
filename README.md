@@ -122,7 +122,7 @@ event-booking/
 ├── booking/                 # Booking microservice (Spring Boot)
 ├── external-api/            # External API microservice (Spring Boot)
 ├── eventbooking-app/        # React frontend
-├── docs/                    # LinkedIn post template, Mermaid diagram
+├── docs/                    # Architecture diagrams (Mermaid)
 ├── docker-compose.yml       # Local development
 ├── docker-compose.prod.yml  # Production (ECR images, CloudWatch logs)
 └── deploy-to-ec2.sh         # Manual deploy script (SCP + SSH to EC2)
