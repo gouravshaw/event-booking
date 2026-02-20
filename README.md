@@ -15,7 +15,7 @@ A full-stack event booking application built with microservices architecture, de
 | **Containerization** | Docker, Docker Compose |
 | **IaC** | Terraform (modular) |
 | **CI/CD** | GitHub Actions |
-| **Cloud (AWS)** | EC2, ECR, S3, IAM, SSM, CloudWatch, SNS, VPC |
+| **Cloud (AWS)** | EC2, ECR, S3, SQS, IAM, SSM, CloudWatch, SNS, VPC |
 | **Security** | Trivy image scanning, SSM secrets, least-privilege IAM |
 | **External APIs** | Google Maps, Frankfurter (currency), Wikipedia |
 
@@ -44,7 +44,7 @@ A full-stack event booking application built with microservices architecture, de
 │  │  └─────────────────────────────────────────┘    │    │
 │  └─────────────────────────────────────────────────┘    │
 │                                                          │
-│  ECR ──── S3 ──── SSM ──── CloudWatch ──── SNS          │
+│  ECR ──── S3 ──── SQS ──── SSM ──── CloudWatch ──── SNS  │
 └─────────────────────────────────────────────────────────┘
          ▲                        │
          │ Push Images            │ Alerts
@@ -65,19 +65,20 @@ A full-stack event booking application built with microservices architecture, de
 | **Frontend** | 80 | React SPA served via Nginx reverse proxy |
 | **MongoDB** | 27017 | Shared NoSQL database |
 
-## AWS Services Used (9)
+## AWS Services Used
 
 | Service | Purpose |
 |---------|---------|
 | **VPC** | Isolated network with public subnet, internet gateway, security groups |
 | **EC2** | Application host running Docker containers |
 | **ECR** | Private Docker image registry (5 repositories) |
-| **S3** | Event image storage + Terraform remote state |
-| **IAM** | Least-privilege EC2 instance role (ECR, S3, SSM, CloudWatch access) |
-| **SSM Parameter Store** | Encrypted secrets management (Firebase keys, API keys) |
-| **CloudWatch** | Centralized logging, metrics, CPU/status alarms, dashboard |
+| **S3** | Event image storage (event images) |
+| **SQS** | Async messaging for ticket updates between booking and event services |
+| **IAM** | EC2 instance role with managed policies (ECR, S3, SQS, SSM, CloudWatch) |
+| **SSM Parameter Store** | Encrypted secrets (Firebase, Google Maps API keys, admin secret) |
+| **CloudWatch** | Logs, metrics, CPU/status alarms, dashboard |
 | **SNS** | Email notifications for CloudWatch alarms |
-| **Security Groups** | Network-level access control (HTTP, HTTPS, SSH) |
+| **Security Groups** | HTTP, HTTPS, SSH access control |
 
 ## CI/CD Pipeline
 
@@ -88,10 +89,10 @@ A full-stack event booking application built with microservices architecture, de
 4. Scan images with **Trivy** for vulnerabilities
 5. Push to ECR (main branch only)
 
-### CD (after CI on main)
+### CD (after CI on main, when AWS secrets are set)
 1. Copy production compose file to EC2
 2. SSH into EC2, pull latest images from ECR
-3. Rolling deployment with `docker compose up -d`
+3. Deploy with `docker-compose -f docker-compose.prod.yml up -d`
 4. Health check all services via `/actuator/health`
 
 ## Project Structure
@@ -113,6 +114,7 @@ event-booking/
 │       ├── ecr/             # Container registries
 │       ├── iam/             # Roles and policies
 │       ├── s3/              # Image storage bucket
+│       ├── sqs/             # Ticket updates queue
 │       ├── ssm/             # Secrets in Parameter Store
 │       └── monitoring/      # CloudWatch, SNS, alarms
 ├── user/                    # User microservice (Spring Boot)
@@ -120,8 +122,10 @@ event-booking/
 ├── booking/                 # Booking microservice (Spring Boot)
 ├── external-api/            # External API microservice (Spring Boot)
 ├── eventbooking-app/        # React frontend
+├── docs/                    # LinkedIn post template, Mermaid diagram
 ├── docker-compose.yml       # Local development
-└── docker-compose.prod.yml  # Production (ECR images + CloudWatch logs)
+├── docker-compose.prod.yml  # Production (ECR images, CloudWatch logs)
+└── deploy-to-ec2.sh         # Manual deploy script (SCP + SSH to EC2)
 ```
 
 ## Getting Started
@@ -150,24 +154,32 @@ docker compose up --build -d
 
 ### Production Deployment (AWS)
 
+**Option A: Terraform + CI/CD (when GitHub secrets are configured)**
+
 ```bash
-# 1. Configure Terraform variables
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your values
+# Edit terraform.tfvars: ec2_key_name, alert_email, Firebase/Google API keys (or use TF_VAR_*)
 
-# 2. Deploy infrastructure
 terraform init
 terraform plan
-terraform apply
+terraform apply   # Creates VPC, EC2, ECR, S3, SQS, IAM, SSM, CloudWatch, SNS
 
-# 3. Set GitHub repository secrets:
-#    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
-#    AWS_ACCOUNT_ID, EC2_HOST, EC2_SSH_KEY
-
-# 4. Push to main branch - CI/CD handles the rest
-git push origin main
+# Add GitHub repo secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ACCOUNT_ID,
+# EC2_HOST, EC2_SSH_KEY, and REACT_APP_FIREBASE_* for frontend build.
+# Push to main → CI builds images, pushes to ECR; CD deploys to EC2.
 ```
+
+**Option B: Manual deploy (build locally, then run script)**
+
+```bash
+# 1. Create EC2 key pair and deploy infra (see Option A), then build and push images to ECR.
+# 2. Update EC2_IP in deploy-to-ec2.sh if needed (or use terraform output ec2_public_ip).
+./deploy-to-ec2.sh   # Copies compose + serviceAccountKey, runs docker-compose on EC2
+# App at http://<EC2_PUBLIC_IP>
+```
+
+Default Terraform region is `us-east-1`; override in `variables.tf` or `terraform.tfvars` if needed.
 
 ### Tear Down
 
