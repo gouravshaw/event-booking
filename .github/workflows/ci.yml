@@ -59,8 +59,15 @@ jobs:
         working-directory: eventbooking-app
 
       - name: Build
-        run: npm run build
+        run: CI=false npm run build
         working-directory: eventbooking-app
+        env:
+          REACT_APP_FIREBASE_API_KEY: ${{ secrets.REACT_APP_FIREBASE_API_KEY }}
+          REACT_APP_FIREBASE_AUTH_DOMAIN: ${{ secrets.REACT_APP_FIREBASE_AUTH_DOMAIN }}
+          REACT_APP_FIREBASE_PROJECT_ID: ${{ secrets.REACT_APP_FIREBASE_PROJECT_ID }}
+          REACT_APP_FIREBASE_STORAGE_BUCKET: ${{ secrets.REACT_APP_FIREBASE_STORAGE_BUCKET }}
+          REACT_APP_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.REACT_APP_FIREBASE_MESSAGING_SENDER_ID }}
+          REACT_APP_FIREBASE_APP_ID: ${{ secrets.REACT_APP_FIREBASE_APP_ID }}
 
   docker-build-scan-push:
     name: Docker Build, Scan & Push
@@ -98,7 +105,14 @@ jobs:
           docker build -t $ECR_REGISTRY/event-booking/event-service:$IMAGE_TAG -t $ECR_REGISTRY/event-booking/event-service:latest ./event
           docker build -t $ECR_REGISTRY/event-booking/booking-service:$IMAGE_TAG -t $ECR_REGISTRY/event-booking/booking-service:latest ./booking
           docker build -t $ECR_REGISTRY/event-booking/external-api-service:$IMAGE_TAG -t $ECR_REGISTRY/event-booking/external-api-service:latest ./external-api
-          docker build -t $ECR_REGISTRY/event-booking/frontend:$IMAGE_TAG -t $ECR_REGISTRY/event-booking/frontend:latest ./eventbooking-app
+          docker build \
+            --build-arg REACT_APP_FIREBASE_API_KEY=${{ secrets.REACT_APP_FIREBASE_API_KEY }} \
+            --build-arg REACT_APP_FIREBASE_AUTH_DOMAIN=${{ secrets.REACT_APP_FIREBASE_AUTH_DOMAIN }} \
+            --build-arg REACT_APP_FIREBASE_PROJECT_ID=${{ secrets.REACT_APP_FIREBASE_PROJECT_ID }} \
+            --build-arg REACT_APP_FIREBASE_STORAGE_BUCKET=${{ secrets.REACT_APP_FIREBASE_STORAGE_BUCKET }} \
+            --build-arg REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.REACT_APP_FIREBASE_MESSAGING_SENDER_ID }} \
+            --build-arg REACT_APP_FIREBASE_APP_ID=${{ secrets.REACT_APP_FIREBASE_APP_ID }} \
+            -t $ECR_REGISTRY/event-booking/frontend:$IMAGE_TAG -t $ECR_REGISTRY/event-booking/frontend:latest ./eventbooking-app
 
       - name: Scan images with Trivy
         uses: aquasecurity/trivy-action@master
