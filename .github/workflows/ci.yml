@@ -98,6 +98,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Create dummy serviceAccountKey.json for builds
+        run: |
+          for SERVICE in user event booking external-api; do
+            mkdir -p $SERVICE/src/main/resources
+            echo "{}" > $SERVICE/src/main/resources/serviceAccountKey.json
+          done
+
       - name: Build Docker images
         run: |
           docker build -t $ECR_REGISTRY/event-booking/user-service:$IMAGE_TAG -t $ECR_REGISTRY/event-booking/user-service:latest ./user
