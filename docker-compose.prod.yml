@@ -56,7 +56,7 @@ services:
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
       - S3_BUCKET_NAME=${S3_BUCKET_NAME:-}
       - SQS_QUEUE_URL=${SQS_QUEUE_URL:-}
-      - AWS_REGION=${AWS_REGION:-eu-west-2}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
     volumes:
       - ./serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
     logging:
@@ -82,7 +82,7 @@ services:
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/eventbooking
       - EVENT_SERVICE_URL=http://event-service:8080/event
       - SQS_QUEUE_URL=${SQS_QUEUE_URL:-}
-      - AWS_REGION=${AWS_REGION:-eu-west-2}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
     volumes:
       - ./serviceAccountKey.json:/usr/local/tomcat/serviceAccountKey.json
     logging:
