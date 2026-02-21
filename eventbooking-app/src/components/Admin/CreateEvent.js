@@ -39,10 +39,11 @@ const CreateEvent = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     checkAdminAccess();
   }, []);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Check if the user is an admin
   const checkAdminAccess = async () => {

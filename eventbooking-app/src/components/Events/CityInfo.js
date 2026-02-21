@@ -5,12 +5,13 @@ const CityInfo = ({ city }) => {
   const [cityData, setCityData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (city) {
       fetchCityInfo();
     }
   }, [city]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const fetchCityInfo = async () => {
     setLoading(true);

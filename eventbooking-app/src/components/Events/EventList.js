@@ -31,7 +31,7 @@ const EventList = () => {
     date: ''
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     checkAuth();
     if (typeFromUrl) {
@@ -40,6 +40,7 @@ const EventList = () => {
       fetchEvents();
     }
   }, [typeFromUrl]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Check if user is logged in and if they're an admin
   const checkAuth = async () => {

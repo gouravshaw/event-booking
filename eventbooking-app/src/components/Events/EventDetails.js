@@ -35,12 +35,13 @@ const EventDetails = () => {
   // Default event image
   const defaultEventImage = "https://via.placeholder.com/800x400?text=No+Image+Available";
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     fetchEventDetails();
     checkAuth();
     loadCurrencies().catch(err => console.error('Currency loading failed:', err));
   }, [id]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Load available currencies
   const loadCurrencies = async () => {
@@ -56,7 +57,7 @@ const EventDetails = () => {
     }
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (event && event.price) {
       if (selectedCurrency === 'GBP') {
@@ -66,6 +67,7 @@ const EventDetails = () => {
       }
     }
   }, [selectedCurrency, event]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Convert the event price
   const convertEventPrice = async () => {

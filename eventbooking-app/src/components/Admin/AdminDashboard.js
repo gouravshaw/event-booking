@@ -20,11 +20,12 @@ const AdminDashboard = () => {
     totalRevenue: 0
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     checkAdminAccess();
     fetchData();
   }, []);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Check if the user is an admin
   const checkAdminAccess = async () => {
