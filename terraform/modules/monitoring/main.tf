@@ -23,8 +23,7 @@ resource "aws_cloudwatch_log_group" "services" {
     "mongodb"
   ])
 
-  name              = "/event-booking/${each.value}"
-  retention_in_days = 30
+  name = "/event-booking/${each.value}"
 
   tags = {
     Service     = each.value
