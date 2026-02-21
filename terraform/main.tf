@@ -28,15 +28,10 @@ module "sqs" {
 }
 
 module "ssm" {
-  source               = "./modules/ssm"
-  project_name         = var.project_name
-  environment          = var.environment
-  firebase_api_key     = var.firebase_api_key
-  firebase_auth_domain = var.firebase_auth_domain
-  firebase_project_id  = var.firebase_project_id
-  google_maps_api_key  = var.google_maps_api_key
-  admin_secret         = var.admin_secret
-  s3_bucket_name       = module.s3.bucket_name
+  source         = "./modules/ssm"
+  project_name   = var.project_name
+  environment    = var.environment
+  s3_bucket_name = module.s3.bucket_name
 }
 
 module "monitoring" {

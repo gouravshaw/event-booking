@@ -158,3 +158,30 @@ jobs:
           docker push $ECR_REGISTRY/event-booking/external-api-service:latest
           docker push $ECR_REGISTRY/event-booking/frontend:$IMAGE_TAG
           docker push $ECR_REGISTRY/event-booking/frontend:latest
+
+      - name: Push secrets to SSM Parameter Store
+        env:
+          PROJECT: event-booking
+          ENV: prod
+          FIREBASE_API_KEY: ${{ secrets.REACT_APP_FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.REACT_APP_FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.REACT_APP_FIREBASE_PROJECT_ID }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+        run: |
+          echo "Syncing secrets from GitHub → AWS SSM..."
+          put() {
+            aws ssm put-parameter \
+              --name "/${PROJECT}/${ENV}/$1" \
+              --value "$2" \
+              --type SecureString \
+              --overwrite \
+              --region $AWS_REGION \
+              --no-cli-pager
+          }
+          put "firebase-api-key"    "$FIREBASE_API_KEY"
+          put "firebase-auth-domain" "$FIREBASE_AUTH_DOMAIN"
+          put "firebase-project-id"  "$FIREBASE_PROJECT_ID"
+          put "google-maps-api-key"  "$GOOGLE_MAPS_API_KEY"
+          put "admin-secret"         "$ADMIN_SECRET"
+          echo "All secrets synced to SSM ✅"

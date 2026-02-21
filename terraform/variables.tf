@@ -38,32 +38,3 @@ variable "alert_email" {
   type        = string
 }
 
-variable "firebase_api_key" {
-  description = "Firebase API key for frontend"
-  type        = string
-  sensitive   = true
-}
-
-variable "firebase_auth_domain" {
-  description = "Firebase auth domain"
-  type        = string
-  sensitive   = true
-}
-
-variable "firebase_project_id" {
-  description = "Firebase project ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "google_maps_api_key" {
-  description = "Google Maps API key"
-  type        = string
-  sensitive   = true
-}
-
-variable "admin_secret" {
-  description = "Admin secret for user registration — must be set explicitly, no default"
-  type        = string
-  sensitive   = true
-}
