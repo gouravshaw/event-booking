@@ -40,11 +40,12 @@ module "ssm" {
 }
 
 module "monitoring" {
-  source       = "./modules/monitoring"
-  project_name = var.project_name
-  environment  = var.environment
-  alert_email  = var.alert_email
+  source          = "./modules/monitoring"
+  project_name    = var.project_name
+  environment     = var.environment
+  alert_email     = var.alert_email
   ec2_instance_id = module.ec2.instance_id
+  sqs_dlq_arn     = module.sqs.dlq_arn
 }
 
 module "ec2" {

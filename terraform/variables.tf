@@ -63,8 +63,7 @@ variable "google_maps_api_key" {
 }
 
 variable "admin_secret" {
-  description = "Admin secret for user registration"
+  description = "Admin secret for user registration — must be set explicitly, no default"
   type        = string
   sensitive   = true
-  default     = "password"
 }

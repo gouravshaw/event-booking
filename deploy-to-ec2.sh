@@ -1,5 +1,6 @@
 #!/bin/bash
-# Run this ON YOUR LOCAL MACHINE. Uses EC2 IP from Terraform output.
+# Run this ON YOUR LOCAL MACHINE after each new KodeKloud session.
+# Update EC2_IP and ECR_REGISTRY below with fresh values from AWS console / Terraform output.
 set -e
 EC2_IP="100.30.178.177"
 KEY="${HOME}/.ssh/event-booking-key.pem"
@@ -21,17 +22,19 @@ fi
 echo "=== Setting env and starting on EC2 ==="
 ssh -i "$KEY" -o StrictHostKeyChecking=no "ec2-user@${EC2_IP}" << 'REMOTE'
 mkdir -p /home/ec2-user/app && cd /home/ec2-user/app
-export ECR_REGISTRY=975050354644.dkr.ecr.us-east-1.amazonaws.com
-export AWS_REGION=us-east-1
+
+# NOTE: Update ECR_REGISTRY with your current session's account ID from Terraform output
+export ECR_REGISTRY=975050354644.dkr.ecr.eu-west-2.amazonaws.com
+export AWS_REGION=eu-west-2
 export IMAGE_TAG=latest
 export S3_BUCKET_NAME=event-booking-images-prod
-export SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/975050354644/event-booking-ticket-updates
+export SQS_QUEUE_URL=https://sqs.eu-west-2.amazonaws.com/975050354644/event-booking-ticket-updates
 export GOOGLE_MAPS_API_KEY=$(aws ssm get-parameter --name /event-booking/prod/google-maps-api-key --with-decryption --query Parameter.Value --output text 2>/dev/null || echo "")
 
 # Create minimal serviceAccountKey if missing
 [ -f serviceAccountKey.json ] || echo '{}' > serviceAccountKey.json
 
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
 docker-compose -f docker-compose.prod.yml pull
 docker-compose -f docker-compose.prod.yml up -d
 echo "Containers starting. Wait ~60s then open app URL from your machine."

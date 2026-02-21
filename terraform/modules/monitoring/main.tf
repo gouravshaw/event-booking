@@ -23,7 +23,8 @@ resource "aws_cloudwatch_log_group" "services" {
     "mongodb"
   ])
 
-  name = "/event-booking/${each.value}"
+  name              = "/event-booking/${each.value}"
+  retention_in_days = 30
 
   tags = {
     Service     = each.value
@@ -145,6 +146,29 @@ resource "aws_cloudwatch_dashboard" "main" {
       }
     ]
   })
+}
+
+resource "aws_cloudwatch_metric_alarm" "sqs_dlq_depth" {
+  alarm_name          = "${var.project_name}-sqs-dlq-messages"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 0
+  alarm_description   = "Messages in the ticket-updates DLQ — a ticket-update failed all retries"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    QueueName = split(":", var.sqs_dlq_arn)[5]
+  }
+
+  tags = {
+    Name        = "${var.project_name}-dlq-alarm"
+    Environment = var.environment
+  }
 }
 
 data "aws_region" "current" {}

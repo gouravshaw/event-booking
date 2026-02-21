@@ -13,3 +13,8 @@ variable "alert_email" {
 variable "ec2_instance_id" {
   type = string
 }
+
+variable "sqs_dlq_arn" {
+  type        = string
+  description = "ARN of the SQS Dead Letter Queue to monitor"
+}

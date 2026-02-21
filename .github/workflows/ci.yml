@@ -59,7 +59,7 @@ jobs:
         working-directory: eventbooking-app
 
       - name: Build
-        run: CI=false npm run build
+        run: npm run build
         working-directory: eventbooking-app
         env:
           REACT_APP_FIREBASE_API_KEY: ${{ secrets.REACT_APP_FIREBASE_API_KEY }}
@@ -133,14 +133,18 @@ jobs:
             --build-arg REACT_APP_FIREBASE_APP_ID=${{ secrets.REACT_APP_FIREBASE_APP_ID }} \
             -t $ECR_REGISTRY/event-booking/frontend:$IMAGE_TAG -t $ECR_REGISTRY/event-booking/frontend:latest ./eventbooking-app
 
-      - name: Scan images with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'image'
-          image-ref: '${{ env.ECR_REGISTRY }}/event-booking/user-service:${{ env.IMAGE_TAG }}'
-          format: 'table'
-          exit-code: '0'
-          severity: 'CRITICAL,HIGH'
+      - name: Scan all images with Trivy
+        run: |
+          for SERVICE in user-service event-service booking-service external-api-service frontend; do
+            echo "=== Scanning $SERVICE ==="
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:latest image \
+              --severity CRITICAL,HIGH \
+              --format table \
+              --exit-code 0 \
+              $ECR_REGISTRY/event-booking/$SERVICE:$IMAGE_TAG
+          done
 
       - name: Push images to ECR
         run: |
