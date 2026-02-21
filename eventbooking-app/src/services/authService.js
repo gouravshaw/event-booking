@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { auth } from '../firebase';
-import { 
+import {
   signInWithEmailAndPassword,
-  signOut, 
-  onAuthStateChanged 
+  signOut,
+  onAuthStateChanged
 } from 'firebase/auth';
 
 // User Service Base URL
@@ -20,14 +20,14 @@ export const registerUser = async (email, password, fullName, phoneNumber, admin
       fullName: fullName,
       phoneNumber: phoneNumber
     };
-    
+
     // Only add admin secret if provided
     if (adminSecret && adminSecret.trim() !== '') {
       requestData.adminSecret = adminSecret;
     }
-    
+
     console.log('Registration data:', JSON.stringify(requestData));
-    
+
     // Send registration request to backend
     const response = await fetch(`${USER_API_URL}/api/public/register`, {
       method: 'POST',
@@ -36,16 +36,16 @@ export const registerUser = async (email, password, fullName, phoneNumber, admin
       },
       body: JSON.stringify(requestData)
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Registration response:', response.status, errorText);
       throw new Error(`Registration failed: ${response.status} ${errorText || response.statusText}`);
     }
-    
+
     // Important: Do not sign in the user automatically after registration
     // No Firebase sign-in, no token storage
-    
+
     const data = await response.json();
     console.log('Registration successful:', data);
     return data;
@@ -60,12 +60,12 @@ export const loginUser = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    
+
     // Get the ID token
     const token = await user.getIdToken();
     localStorage.setItem('userToken', token);
     localStorage.setItem('userEmail', email);
-    
+
     return { token };
   } catch (error) {
     console.error("Login error:", error);
@@ -83,17 +83,17 @@ export const isAdmin = async () => {
   try {
     const userProfile = await getUserProfile();
     console.log('User profile for admin check:', userProfile);
-    
+
     // Check if userProfile exists and has role property
     if (!userProfile) {
       console.log('No user profile found');
       return false;
     }
-    
+
     // Check role (could be either 'ADMIN' or 'admin' depending on your API)
     const isAdminUser = userProfile.role === 'ADMIN' || userProfile.role === 'admin';
     console.log('Is admin based on role:', isAdminUser);
-    
+
     return isAdminUser;
   } catch (error) {
     console.error("Admin check error:", error);
@@ -138,10 +138,9 @@ export const getUserProfile = async () => {
       `${USER_API_URL}/api/profile`,
       `${USER_API_URL}/user/profile`
     ];
-    
+
     let response = null;
-    let lastError = null;
-    
+
     // Try each possible URL
     for (const url of urls) {
       try {
@@ -151,17 +150,16 @@ export const getUserProfile = async () => {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         // If we got here, the request was successful
         console.log(`Profile found at: ${url}`);
         return response.data;
       } catch (err) {
         console.log(`URL ${url} failed with: ${err.message}`);
-        lastError = err;
         // Continue to the next URL
       }
     }
-    
+
     // If we get here, all URLs failed
     console.error("All profile URL patterns failed. Using fallback profile.");
     return {
@@ -171,7 +169,7 @@ export const getUserProfile = async () => {
     };
   } catch (error) {
     console.error("Get profile error:", error);
-    
+
     // Provide a fallback profile
     return {
       email: localStorage.getItem('userEmail'),

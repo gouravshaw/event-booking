@@ -6,13 +6,12 @@ import { isAdmin } from '../../services/authService';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  
+
   // State for events, bookings and loading
   const [events, setEvents] = useState([]);
-  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Stats
   const [stats, setStats] = useState({
     totalEvents: 0,
@@ -20,25 +19,23 @@ const AdminDashboard = () => {
     totalTicketsBooked: 0,
     totalRevenue: 0
   });
-  
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Check if user is admin
     checkAdminAccess();
-    
-    // Fetch all data
     fetchData();
   }, []);
-  
+
   // Check if the user is an admin
   const checkAdminAccess = async () => {
     const adminStatus = await isAdmin();
-    
+
     // If not admin, redirect to home
     if (!adminStatus) {
       navigate('/');
     }
   };
-  
+
   // Fetch all data from API
   const fetchData = async () => {
     setLoading(true);
@@ -46,42 +43,41 @@ const AdminDashboard = () => {
       // Fetch events
       const eventsData = await getAllEvents();
       setEvents(eventsData);
-      
+
       // Fetch bookings
       const bookingsData = await getAllBookings();
       // Parse bookings if it's a string
       const parsedBookings = typeof bookingsData === 'string' ? JSON.parse(bookingsData) : bookingsData;
-      setBookings(Array.isArray(parsedBookings) ? parsedBookings : []);
-      
+      const parsedArray = Array.isArray(parsedBookings) ? parsedBookings : [];
+
       // Calculate stats
-      calculateStats(eventsData, Array.isArray(parsedBookings) ? parsedBookings : []);
-      
+      calculateStats(eventsData, parsedArray);
+
       setError(null);
     } catch (err) {
       setError('Failed to load data. Please try again later.');
       setEvents([]);
-      setBookings([]);
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Calculate dashboard statistics
   const calculateStats = (events, bookings) => {
     const totalEvents = events.length;
     const totalBookings = bookings.length;
-    
+
     // Calculate total tickets booked and revenue
     let ticketsBooked = 0;
     let revenue = 0;
-    
+
     bookings.forEach(booking => {
       if (booking.status !== 'CANCELLED') {
         ticketsBooked += booking.ticketsBooked || 0;
         revenue += booking.totalPrice || 0;
       }
     });
-    
+
     setStats({
       totalEvents,
       totalBookings,
@@ -89,7 +85,7 @@ const AdminDashboard = () => {
       totalRevenue: revenue
     });
   };
-  
+
   // Handle event deletion
   const handleDeleteEvent = async (eventId) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
@@ -103,7 +99,7 @@ const AdminDashboard = () => {
       }
     }
   };
-  
+
   return (
     <div className="container my-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -112,7 +108,7 @@ const AdminDashboard = () => {
           Create New Event
         </Link>
       </div>
-      
+
       {/* Stats Cards */}
       <div className="row mb-4">
         <div className="col-md-3">
@@ -148,14 +144,14 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Error Message */}
       {error && (
         <div className="alert alert-danger" role="alert">
           {error}
         </div>
       )}
-      
+
       {/* Loading Indicator */}
       {loading ? (
         <div className="text-center my-5">

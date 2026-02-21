@@ -5,9 +5,9 @@ const CityInfo = ({ city }) => {
   const [cityData, setCityData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (city) {
-      // Fetch data when component mounts
       fetchCityInfo();
     }
   }, [city]);
@@ -56,10 +56,10 @@ const CityInfo = ({ city }) => {
       </div>
       <div className="card-body">
         {cityData.imageUrl && (
-          <img 
-            src={cityData.imageUrl} 
-            alt={cityData.name} 
-            className="img-fluid rounded float-end ms-3 mb-2" 
+          <img
+            src={cityData.imageUrl}
+            alt={cityData.name}
+            className="img-fluid rounded float-end ms-3 mb-2"
             style={{ maxWidth: '200px' }}
           />
         )}

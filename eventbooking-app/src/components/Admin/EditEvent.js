@@ -15,7 +15,7 @@ const EVENT_TYPES = [
 const EditEvent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   // State for form data
   const [formData, setFormData] = useState({
     name: '',
@@ -32,39 +32,37 @@ const EditEvent = () => {
     duration: 0,
     imageData: '' // Added field for image data
   });
-  
+
   // State for image preview
   const [imagePreview, setImagePreview] = useState(null);
-  
+
   // State for loading and errors
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Check if user is admin
     checkAdminAccess();
-    
-    // Fetch event details
     fetchEventDetails();
   }, [id]);
-  
+
   // Check if the user is an admin
   const checkAdminAccess = async () => {
     const adminStatus = await isAdmin();
-    
+
     // If not admin, redirect to home
     if (!adminStatus) {
       navigate('/');
     }
   };
-  
+
   // Fetch event details from API
   const fetchEventDetails = async () => {
     setLoading(true);
     try {
       const event = await getEventById(id);
-      
+
       // Update form data with event details
       setFormData({
         name: event.name || '',
@@ -81,12 +79,12 @@ const EditEvent = () => {
         duration: event.duration || 0,
         imageData: event.imageData || '' // Get image data
       });
-      
+
       // Set image preview if exists
       if (event.imageData) {
         setImagePreview(event.imageData);
       }
-      
+
       setError(null);
     } catch (err) {
       setError('Failed to load event details. Please try again later.');
@@ -94,11 +92,11 @@ const EditEvent = () => {
       setLoading(false);
     }
   };
-  
+
   // Handle input changes
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    
+
     // Convert number fields to numbers
     if (type === 'number') {
       setFormData({
@@ -112,7 +110,7 @@ const EditEvent = () => {
       });
     }
   };
-  
+
   // Handle image upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -132,7 +130,7 @@ const EditEvent = () => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   // Handle image removal
   const handleRemoveImage = () => {
     setFormData({
@@ -141,17 +139,17 @@ const EditEvent = () => {
     });
     setImagePreview(null);
   };
-  
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    
+
     try {
       // Call update event API
       await updateEvent(id, formData);
-      
+
       // Show success message and redirect
       alert('Event updated successfully!');
       navigate('/admin/dashboard');
@@ -161,7 +159,7 @@ const EditEvent = () => {
       setSaving(false);
     }
   };
-  
+
   // Show loading spinner while fetching event details
   if (loading) {
     return (
@@ -173,7 +171,7 @@ const EditEvent = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="container my-5">
       <div className="row justify-content-center">
@@ -189,7 +187,7 @@ const EditEvent = () => {
                   {error}
                 </div>
               )}
-              
+
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label htmlFor="name" className="form-label">Event Name</label>
@@ -203,7 +201,7 @@ const EditEvent = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="mb-3">
                   <label htmlFor="type" className="form-label">Event Type</label>
                   <select
@@ -222,7 +220,7 @@ const EditEvent = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="row mb-3">
                   <div className="col-md-6">
                     <label htmlFor="availableTickets" className="form-label">Available Tickets</label>
@@ -252,7 +250,7 @@ const EditEvent = () => {
                     />
                   </div>
                 </div>
-                
+
                 {/* Image Upload Field */}
                 <div className="mb-3">
                   <label htmlFor="image" className="form-label">Event Image</label>
@@ -264,20 +262,20 @@ const EditEvent = () => {
                     onChange={handleImageUpload}
                   />
                   <div className="form-text">Upload an image for the event (recommended size: 800x400px)</div>
-                  
+
                   {/* Image Preview - Updated to show full image */}
                   {imagePreview && (
                     <div className="mt-2">
                       <p>Current Image:</p>
                       <div className="position-relative text-center">
-                        <img 
-                          src={imagePreview} 
-                          alt="Event preview" 
-                          className="img-thumbnail" 
-                          style={{ maxHeight: '200px', maxWidth: '100%', width: 'auto' }} 
+                        <img
+                          src={imagePreview}
+                          alt="Event preview"
+                          className="img-thumbnail"
+                          style={{ maxHeight: '200px', maxWidth: '100%', width: 'auto' }}
                         />
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="btn btn-sm btn-danger position-absolute top-0 end-0"
                           onClick={handleRemoveImage}
                         >
@@ -287,7 +285,7 @@ const EditEvent = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mb-3">
                   <label htmlFor="venue" className="form-label">Venue Name</label>
                   <input
@@ -300,7 +298,7 @@ const EditEvent = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="mb-3">
                   <label htmlFor="address" className="form-label">Address</label>
                   <input
@@ -313,7 +311,7 @@ const EditEvent = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="row mb-3">
                   <div className="col-md-4">
                     <label htmlFor="city" className="form-label">City</label>
@@ -352,7 +350,7 @@ const EditEvent = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="row mb-3">
                   <div className="col-md-4">
                     <label htmlFor="date" className="form-label">Date</label>
@@ -393,7 +391,7 @@ const EditEvent = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="d-flex justify-content-between mt-4">
                   <Link to="/admin/dashboard" className="btn btn-secondary">
                     Cancel

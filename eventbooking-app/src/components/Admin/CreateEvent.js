@@ -14,7 +14,7 @@ const EVENT_TYPES = [
 
 const CreateEvent = () => {
   const navigate = useNavigate();
-  
+
   // State for form data
   const [formData, setFormData] = useState({
     name: '',
@@ -31,33 +31,33 @@ const CreateEvent = () => {
     duration: 2,
     imageData: '' // New field for image data
   });
-  
+
   // State for image preview
   const [imagePreview, setImagePreview] = useState(null);
-  
+
   // State for loading and errors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Check if user is admin
     checkAdminAccess();
   }, []);
-  
+
   // Check if the user is an admin
   const checkAdminAccess = async () => {
     const adminStatus = await isAdmin();
-    
+
     // If not admin, redirect to home
     if (!adminStatus) {
       navigate('/');
     }
   };
-  
+
   // Handle input changes
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    
+
     // Convert number fields to numbers
     if (type === 'number') {
       setFormData({
@@ -71,7 +71,7 @@ const CreateEvent = () => {
       });
     }
   };
-  
+
   // Handle image upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -91,17 +91,17 @@ const CreateEvent = () => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     try {
       // Call create event API
       await createEvent(formData);
-      
+
       // Show success message and redirect
       alert('Event created successfully!');
       navigate('/admin/dashboard');
@@ -111,7 +111,7 @@ const CreateEvent = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="container my-5">
       <div className="row justify-content-center">
@@ -127,7 +127,7 @@ const CreateEvent = () => {
                   {error}
                 </div>
               )}
-              
+
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label htmlFor="name" className="form-label">Event Name</label>
@@ -141,7 +141,7 @@ const CreateEvent = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="mb-3">
                   <label htmlFor="type" className="form-label">Event Type</label>
                   <select
@@ -160,7 +160,7 @@ const CreateEvent = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="row mb-3">
                   <div className="col-md-6">
                     <label htmlFor="availableTickets" className="form-label">Available Tickets</label>
@@ -190,7 +190,7 @@ const CreateEvent = () => {
                     />
                   </div>
                 </div>
-                
+
                 {/* New Image Upload Field */}
                 <div className="mb-3">
                   <label htmlFor="image" className="form-label">Event Image</label>
@@ -202,23 +202,23 @@ const CreateEvent = () => {
                     onChange={handleImageUpload}
                   />
                   <div className="form-text">Upload an image for the event (recommended size: 800x400px)</div>
-                  
+
                   {/* Image Preview - Updated to show full image */}
                   {imagePreview && (
                     <div className="mt-2">
                       <p>Image Preview:</p>
                       <div className="text-center">
-                        <img 
-                          src={imagePreview} 
-                          alt="Event preview" 
-                          className="img-thumbnail" 
-                          style={{ maxHeight: '200px', maxWidth: '100%', width: 'auto' }} 
+                        <img
+                          src={imagePreview}
+                          alt="Event preview"
+                          className="img-thumbnail"
+                          style={{ maxHeight: '200px', maxWidth: '100%', width: 'auto' }}
                         />
                       </div>
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mb-3">
                   <label htmlFor="venue" className="form-label">Venue Name</label>
                   <input
@@ -231,7 +231,7 @@ const CreateEvent = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="mb-3">
                   <label htmlFor="address" className="form-label">Address</label>
                   <input
@@ -244,7 +244,7 @@ const CreateEvent = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="row mb-3">
                   <div className="col-md-4">
                     <label htmlFor="city" className="form-label">City</label>
@@ -283,7 +283,7 @@ const CreateEvent = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="row mb-3">
                   <div className="col-md-4">
                     <label htmlFor="date" className="form-label">Date</label>
@@ -324,7 +324,7 @@ const CreateEvent = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="d-flex justify-content-between mt-4">
                   <Link to="/admin/dashboard" className="btn btn-secondary">
                     Cancel

@@ -19,42 +19,37 @@ const EventList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAdminUser, setIsAdminUser] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
+
   // Parse query parameters to get type from URL
   const queryParams = new URLSearchParams(location.search);
   const typeFromUrl = queryParams.get('type');
-  
+
   // State for search filters
   const [filters, setFilters] = useState({
     type: typeFromUrl || '',
     city: '',
     date: ''
   });
-  
-  // Load events and check auth on component mount
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     checkAuth();
-    
-    // If there's a type in the URL, search for that type immediately
     if (typeFromUrl) {
-      handleSearch({ preventDefault: () => {} });
+      handleSearch({ preventDefault: () => { } });
     } else {
       fetchEvents();
     }
   }, [typeFromUrl]);
-  
+
   // Check if user is logged in and if they're an admin
   const checkAuth = async () => {
     const loggedIn = isAuthenticated();
-    setIsLoggedIn(loggedIn);
-    
     if (loggedIn) {
       const adminStatus = await isAdmin();
       setIsAdminUser(adminStatus);
     }
   };
-  
+
   // Fetch all events from API
   const fetchEvents = async () => {
     setLoading(true);
@@ -69,7 +64,7 @@ const EventList = () => {
       setLoading(false);
     }
   };
-  
+
   // Handle filter changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -78,12 +73,12 @@ const EventList = () => {
       [name]: value
     });
   };
-  
+
   // Handle search submit
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const data = await searchEvents(
         filters.type || null,
@@ -98,7 +93,7 @@ const EventList = () => {
       setLoading(false);
     }
   };
-  
+
   // Reset filters
   const handleReset = () => {
     setFilters({
@@ -108,15 +103,15 @@ const EventList = () => {
     });
     fetchEvents();
   };
-  
+
   // Default event image
   const defaultEventImage = "https://via.placeholder.com/400x200?text=No+Image+Available";
-  
+
   return (
     <div className="container my-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Upcoming Events</h1>
-        
+
         {isAdminUser && (
           <Link to="/admin/events/create" className="btn btn-success">
             <i className="bi bi-plus-circle me-2"></i>
@@ -124,7 +119,7 @@ const EventList = () => {
           </Link>
         )}
       </div>
-      
+
       {/* Search/Filter Form */}
       <div className="card mb-4">
         <div className="card-header bg-light">
@@ -150,7 +145,7 @@ const EventList = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="col-md-4">
                 <label htmlFor="city" className="form-label">City</label>
                 <input
@@ -163,7 +158,7 @@ const EventList = () => {
                   placeholder="Enter city"
                 />
               </div>
-              
+
               <div className="col-md-4">
                 <label htmlFor="date" className="form-label">Date</label>
                 <input
@@ -175,14 +170,14 @@ const EventList = () => {
                   onChange={handleFilterChange}
                 />
               </div>
-              
+
               <div className="col-12">
                 <button type="submit" className="btn btn-primary me-2">
                   Search
                 </button>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-secondary"
                   onClick={handleReset}
                 >
                   Reset
@@ -192,14 +187,14 @@ const EventList = () => {
           </form>
         </div>
       </div>
-      
+
       {/* Error Message */}
       {error && (
         <div className="alert alert-danger" role="alert">
           {error}
         </div>
       )}
-      
+
       {/* Loading Indicator */}
       {loading ? (
         <div className="text-center my-5">
@@ -223,11 +218,11 @@ const EventList = () => {
                 <div className="card h-100">
                   {/* Event Image - Updated to show full image without cropping */}
                   <div className="card-img-top text-center" style={{ padding: '10px' }}>
-                    <img 
-                      src={event.imageData || defaultEventImage} 
+                    <img
+                      src={event.imageData || defaultEventImage}
                       alt={event.name}
                       className="img-fluid"
-                      style={{ maxHeight: '200px', width: 'auto' }}  
+                      style={{ maxHeight: '200px', width: 'auto' }}
                     />
                   </div>
                   <div className="card-body">
@@ -244,8 +239,8 @@ const EventList = () => {
                     </p>
                   </div>
                   <div className="card-footer bg-white text-center">
-                    <Link 
-                      to={`/events/${event.id}`} 
+                    <Link
+                      to={`/events/${event.id}`}
                       className="btn btn-primary w-100"
                     >
                       View Details

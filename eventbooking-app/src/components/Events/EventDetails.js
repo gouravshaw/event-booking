@@ -12,12 +12,12 @@ const EventDetails = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated());
   const [isAdminUser, setIsAdminUser] = useState(false);
-  
+
   // State for event details
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // State for booking form
   const [tickets, setTickets] = useState(1);
   const [bookingStatus, setBookingStatus] = useState({
@@ -25,31 +25,23 @@ const EventDetails = () => {
     error: null,
     success: false
   });
-  
+
   // Currency conversion states
   const [currencies, setCurrencies] = useState({});
   const [selectedCurrency, setSelectedCurrency] = useState('GBP');
   const [convertedPrice, setConvertedPrice] = useState(0);
   const [isConverting, setIsConverting] = useState(false);
-  
+
   // Default event image
   const defaultEventImage = "https://via.placeholder.com/800x400?text=No+Image+Available";
-  
-  // Load event details and check auth on component mount
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    console.log('EventDetails component mounted');
     fetchEventDetails();
     checkAuth();
-    
-    // Load currencies
-    console.log('Loading currencies...');
-    loadCurrencies().then(() => {
-      console.log('Currencies loaded successfully');
-    }).catch(err => {
-      console.error('Currency loading failed:', err);
-    });
+    loadCurrencies().catch(err => console.error('Currency loading failed:', err));
   }, [id]);
-  
+
   // Load available currencies
   const loadCurrencies = async () => {
     try {
@@ -63,11 +55,10 @@ const EventDetails = () => {
       throw err;
     }
   };
-  
-  // Convert price when currency changes or event loads
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (event && event.price) {
-      console.log(`Price update needed. Currency: ${selectedCurrency}, Price: ${event.price}`);
       if (selectedCurrency === 'GBP') {
         setConvertedPrice(event.price);
       } else {
@@ -75,14 +66,14 @@ const EventDetails = () => {
       }
     }
   }, [selectedCurrency, event]);
-  
+
   // Convert the event price
   const convertEventPrice = async () => {
     if (selectedCurrency === 'GBP') {
       setConvertedPrice(event.price);
       return;
     }
-    
+
     setIsConverting(true);
     try {
       console.log(`Converting ${event.price} GBP to ${selectedCurrency}`);
@@ -96,13 +87,13 @@ const EventDetails = () => {
       setIsConverting(false);
     }
   };
-  
+
   // Handle currency selection changes
   const handleCurrencyChange = (e) => {
     console.log('Currency changed to:', e.target.value);
     setSelectedCurrency(e.target.value);
   };
-  
+
   // Format currency with appropriate symbol
   const formatCurrency = (amount, currencyCode) => {
     const symbols = {
@@ -118,9 +109,9 @@ const EventDetails = () => {
       'BRL': 'R$',
       'MXN': 'Mex$'
     };
-    
+
     const symbol = symbols[currencyCode] || '';
-    
+
     // Format number based on currency
     if (currencyCode === 'JPY' || currencyCode === 'CNY') {
       return `${symbol}${Math.round(amount).toLocaleString()}`; // No decimal for yen and yuan
@@ -128,18 +119,18 @@ const EventDetails = () => {
       return `${symbol}${amount.toFixed(2).toLocaleString()}`;
     }
   };
-  
+
   // Check if user is logged in and if they're an admin
   const checkAuth = async () => {
     const loggedIn = isAuthenticated();
     setIsLoggedIn(loggedIn);
-    
+
     if (loggedIn) {
       const adminStatus = await isAdmin();
       setIsAdminUser(adminStatus);
     }
   };
-  
+
   // Fetch event details from API
   const fetchEventDetails = async () => {
     setLoading(true);
@@ -155,7 +146,7 @@ const EventDetails = () => {
       setLoading(false);
     }
   };
-  
+
   // Handle ticket quantity change
   const handleTicketChange = (e) => {
     const value = parseInt(e.target.value);
@@ -163,31 +154,31 @@ const EventDetails = () => {
       setTickets(value);
     }
   };
-  
+
   // Handle booking submission
   const handleBookTickets = async (e) => {
     e.preventDefault();
-    
+
     if (!isLoggedIn) {
       navigate('/login');
       return;
     }
-    
+
     setBookingStatus({
       loading: true,
       error: null,
       success: false
     });
-    
+
     try {
       await createBooking(event.id, tickets);
-      
+
       setBookingStatus({
         loading: false,
         error: null,
         success: true
       });
-      
+
       // Refresh event details to update available tickets
       fetchEventDetails();
     } catch (err) {
@@ -198,7 +189,7 @@ const EventDetails = () => {
       });
     }
   };
-  
+
   // Render loading state
   if (loading) {
     return (
@@ -210,7 +201,7 @@ const EventDetails = () => {
       </div>
     );
   }
-  
+
   // Render error state
   if (error || !event) {
     return (
@@ -249,13 +240,13 @@ const EventDetails = () => {
           <h1 className="display-5 fw-bold">{event.name}</h1>
           <p className="text-muted">{event.type}</p>
         </div>
-        
+
         {/* Main content - left column */}
         <div className="col-lg-8">
           {/* Event Image */}
           <div className="card mb-4 shadow-sm">
-            <img 
-              src={event.imageData || defaultEventImage} 
+            <img
+              src={event.imageData || defaultEventImage}
               alt={event.name}
               className="card-img-top"
               style={{ maxHeight: '400px', objectFit: 'cover' }}
@@ -270,15 +261,15 @@ const EventDetails = () => {
                 <div className="col-md-6 text-md-end">
                   <p className="mb-1"><strong>Available Tickets:</strong> {event.availableTickets}</p>
                   <p className="mb-1">
-                    <strong>Price:</strong> {isConverting ? 
-                      <span><small>Converting...</small></span> : 
+                    <strong>Price:</strong> {isConverting ?
+                      <span><small>Converting...</small></span> :
                       formatCurrency(convertedPrice, selectedCurrency)}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          
+
           {/* Event Location Card */}
           <div className="card mb-4 shadow-sm">
             <div className="card-header bg-primary text-white">
@@ -289,16 +280,16 @@ const EventDetails = () => {
               <p className="mb-1">{event.address}</p>
               <p className="mb-1">{event.city}, {event.country}</p>
               <p className="mb-3">{event.postcode}</p>
-              
+
               <EventMap event={event} />
             </div>
           </div>
-          
+
           {/* Get Directions Button */}
-          <a 
+          <a
             href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
               `${event.venue}, ${event.address}, ${event.city}, ${event.country}, ${event.postcode}`
-            )}`} 
+            )}`}
             className="btn btn-primary btn-lg w-100 mb-4"
             target="_blank"
             rel="noopener noreferrer"
@@ -306,7 +297,7 @@ const EventDetails = () => {
             Get Directions
           </a>
         </div>
-        
+
         {/* Right Column - Booking and Navigation */}
         <div className="col-lg-4">
           <div style={customStyles.stickyBookingBox}>
@@ -327,7 +318,7 @@ const EventDetails = () => {
                         {bookingStatus.error}
                       </div>
                     )}
-                    
+
                     <form onSubmit={handleBookTickets}>
                       <div className="mb-3">
                         <label htmlFor="tickets" className="form-label">
@@ -347,14 +338,14 @@ const EventDetails = () => {
                           {event.availableTickets} tickets available
                         </div>
                       </div>
-                      
+
                       {/* Currency selector */}
                       <div className="mb-3">
                         <label htmlFor="currency" className="form-label">
                           Select Currency
                         </label>
-                        <select 
-                          className="form-select" 
+                        <select
+                          className="form-select"
                           id="currency"
                           value={selectedCurrency}
                           onChange={handleCurrencyChange}
@@ -370,15 +361,15 @@ const EventDetails = () => {
                           )}
                         </select>
                       </div>
-                      
+
                       <div className="mb-3">
                         <p className="fw-bold">
-                          Total Price: {isConverting ? 
-                            <span><small>Converting...</small></span> : 
+                          Total Price: {isConverting ?
+                            <span><small>Converting...</small></span> :
                             formatCurrency(convertedPrice * tickets, selectedCurrency)}
                         </p>
                       </div>
-                      
+
                       <button
                         type="submit"
                         className="btn btn-primary w-100"
@@ -391,15 +382,15 @@ const EventDetails = () => {
                 )}
               </div>
             </div>
-            
+
             {/* Back to Events Button */}
             <Link to="/events" className="btn btn-outline-secondary w-100 mb-4">
               Back to Events
             </Link>
-            
+
             {/* City Information - Moved here as requested */}
             <CityInfo city={event.city} />
-            
+
             {/* Admin Edit Button */}
             {isAdminUser && (
               <Link to={`/admin/events/edit/${event.id}`} className="btn btn-outline-primary w-100 mt-2">
